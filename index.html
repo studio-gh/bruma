@@ -2,50 +2,72 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Bruma</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bruma: painel de sincronização</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body{font-family:system-ui,sans-serif; max-width:720px; margin:40px auto; padding:0 20px; color:#233240;}
-  button{background:#2E6CA8; color:#fff; border:none; border-radius:999px; padding:10px 20px; font-weight:700; cursor:pointer; font-size:14px;}
+  :root{
+    --sky-top:#4A8FD6; --sky-mid:#8FC1EA; --sky-bottom:#EEF6FC;
+    --ink:#233240; --ink-soft:#5C7286; --blue-deep:#2E6CA8;
+    --line:#D7E6F2; --glass:rgba(255,255,255,.75);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; color:var(--ink); font-family:'DM Sans',system-ui,sans-serif; line-height:1.55;
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 40%, var(--sky-bottom) 100%);
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:56px 20px 80px;}
+  .kicker{color:#fff; font-weight:700; font-size:12px; letter-spacing:.14em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.15);}
+  h1{font-family:'Fraunces',serif; font-weight:700; color:#fff; font-size:28px; margin:8px 0 28px; text-shadow:0 2px 12px rgba(0,40,80,.18);}
+
+  .card{background:var(--glass); border:1px solid rgba(255,255,255,.8); border-radius:18px; padding:24px; margin-bottom:18px; box-shadow:0 14px 34px -22px rgba(0,40,80,.35);}
+  .card p{margin:0 0 14px; color:var(--ink-soft); font-size:14px;}
+  #user-info{color:var(--ink); font-weight:700; font-size:14px; margin-bottom:18px;}
+
+  button{background:var(--blue-deep); color:#fff; border:none; border-radius:999px; padding:11px 22px; font-weight:700; cursor:pointer; font-size:14px;}
   button:disabled{opacity:.5; cursor:default;}
-  input{border:1px solid #D7E6F2; border-radius:8px; padding:9px 12px; font-size:14px; width:260px;}
-  .row{display:flex; gap:10px; align-items:center; margin:16px 0; flex-wrap:wrap;}
-  .log{background:#EEF6FC; border-radius:10px; padding:14px; font-size:13px; color:#5C7286; white-space:pre-wrap; max-height:200px; overflow:auto;}
-  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin-top:16px;}
-  .grid img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; background:#D7E6F2;}
-  h1{font-size:22px;}
+  input{border:1px solid var(--line); background:#fff; border-radius:8px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; color:var(--ink); width:260px;}
+  .row{display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap;}
+
+  .log{background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.8); border-radius:14px; padding:16px; font-size:13px; color:var(--ink-soft); white-space:pre-wrap; max-height:220px; overflow:auto; font-family:ui-monospace,monospace;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin-top:4px;}
+  .grid img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; background:var(--line); border:1px solid rgba(255,255,255,.8);}
   .hidden{display:none;}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="kicker">Bruma</div>
+  <h1>Painel de sincronização</h1>
 
-<h1>Bruma: painel de sincronização</h1>
+  <!--
+    Antes de usar: preencha SUPABASE_URL e SUPABASE_ANON_KEY abaixo
+    (Supabase: Project Settings > API).
+  -->
+  <script>
+    const SUPABASE_URL = "https://wccbsykrswcxnckcasea.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_05vKj-uq-oo0zbTWKUDITw_qYsJZnCd";
+  </script>
 
-<!--
-  Antes de usar: preencha SUPABASE_URL e SUPABASE_ANON_KEY abaixo
-  (Supabase: Project Settings > API). O Client ID/Secret do Google
-  já configurados no Supabase cobrem o login, não precisa repetir aqui.
--->
-<script>
-  const SUPABASE_URL = "https://wccbsykrswcxnckcasea.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_05vKj-uq-oo0zbTWKUDITw_qYsJZnCd";
-</script>
-
-<div id="login-section">
-  <p>Entre com sua conta Google para conectar o Drive.</p>
-  <button id="login-btn">Entrar com Google</button>
-</div>
-
-<div id="app-section" class="hidden">
-  <p id="user-info"></p>
-  <div class="row">
-    <input id="folder-id" placeholder="ID da pasta do Google Drive">
-    <button id="sync-btn">Sincronizar pasta</button>
+  <div class="card" id="login-section">
+    <p>Entre com sua conta Google para conectar o Drive.</p>
+    <button id="login-btn">Entrar com Google</button>
   </div>
-  <div class="grid" id="asset-grid"></div>
-</div>
 
-<div class="log" id="log"></div>
+  <div class="card hidden" id="app-section">
+    <p id="user-info"></p>
+    <div class="row">
+      <input id="folder-id" placeholder="ID da pasta do Google Drive">
+      <button id="sync-btn">Sincronizar pasta</button>
+    </div>
+    <div class="grid" id="asset-grid"></div>
+  </div>
+
+  <div class="log" id="log"></div>
+</div>
 
 <script>
   function log(msg) {
@@ -62,6 +84,7 @@
   let providerToken = null;
   let currentWorkspaceId = null;
   let currentConnectionId = null;
+  let loginHandled = false; // evita rodar afterLogin() duas vezes pra mesma sessão
 
   document.getElementById("login-btn").addEventListener("click", async () => {
     const { error } = await sb.auth.signInWithOAuth({
@@ -75,9 +98,6 @@
     if (error) log("Erro ao iniciar login: " + error.message);
   });
 
-  // O provider_token (token de acesso do Google) só vem disponível
-  // no evento disparado logo após o redirect do login, por isso
-  // é capturado aqui em vez de em getSession() em outro momento.
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === "SIGNED_IN" && session) {
       if (session.provider_token) providerToken = session.provider_token;
@@ -86,11 +106,13 @@
   });
 
   async function afterLogin(session) {
+    if (loginHandled) return;
+    loginHandled = true;
+
     document.getElementById("login-section").classList.add("hidden");
     document.getElementById("app-section").classList.remove("hidden");
     document.getElementById("user-info").textContent = "Logado como " + session.user.email;
 
-    // Garante que existe um workspace para este usuário.
     let { data: workspaces } = await sb
       .from("workspaces")
       .select("id")
@@ -115,7 +137,6 @@
       return;
     }
 
-    // Salva (ou atualiza) a conexão com o Google Drive.
     const { data: existingConn } = await sb
       .from("cloud_connections")
       .select("id")
@@ -174,7 +195,6 @@
 
     log(files.length + " arquivo(s) encontrado(s). Criando a galeria e salvando...");
 
-    // Garante uma galeria pra essa pasta.
     let { data: galleries } = await sb
       .from("galleries")
       .select("id")
@@ -224,7 +244,6 @@
     log("Sincronização concluída.");
   });
 
-  // Se a página recarregar depois do redirect do Google, confere se já existe sessão.
   sb.auth.getSession().then(({ data }) => {
     if (data.session) afterLogin(data.session);
   });

@@ -82,6 +82,7 @@
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let providerToken = null;
+  let providerRefreshToken = null;
   let currentWorkspaceId = null;
   let currentConnectionId = null;
   let loginHandled = false; // evita rodar afterLogin() duas vezes pra mesma sessão
@@ -101,6 +102,7 @@
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === "SIGNED_IN" && session) {
       if (session.provider_token) providerToken = session.provider_token;
+      if (session.provider_refresh_token) providerRefreshToken = session.provider_refresh_token;
       await checkTokenScope();
       await afterLogin(session);
     }
@@ -166,16 +168,20 @@
       currentConnectionId = existingConn[0].id;
       await sb
         .from("cloud_connections")
-        .update({ access_token: providerToken })
+        .update({
+          access_token: providerToken,
+          ...(providerRefreshToken ? { refresh_token: providerRefreshToken } : {})
+        })
         .eq("id", currentConnectionId);
-      log("Conexão com o Google Drive atualizada.");
+      log("Conexão com o Google Drive atualizada." + (providerRefreshToken ? " Refresh token recebido e salvo." : " Sem refresh token novo nesta sessão."));
     } else {
       const { data: conn, error } = await sb
         .from("cloud_connections")
         .insert({
           workspace_id: currentWorkspaceId,
           provider: "google_drive",
-          access_token: providerToken
+          access_token: providerToken,
+          refresh_token: providerRefreshToken
         })
         .select("id")
         .single();
@@ -190,28 +196,47 @@
     if (!folderId) { log("Cole o ID de uma pasta do Drive primeiro."); return; }
     if (!providerToken) { log("Sem token do Google nesta sessão. Saia e entre de novo pra gerar um novo."); return; }
 
-    log("Buscando arquivos da pasta " + folderId + "...");
-    const url = "https://www.googleapis.com/drive/v3/files"
-      + "?q=" + encodeURIComponent(`'${folderId}' in parents and trashed = false`)
-      + "&fields=" + encodeURIComponent("files(id,name,thumbnailLink,imageMediaMetadata)")
-      + "&pageSize=100";
+    log("Buscando arquivos da pasta " + folderId + " (incluindo subpastas)...");
 
+    const FOLDER_MIME = "application/vnd.google-apps.folder";
     let files = [];
+    let foldersScanned = 0;
+
+    async function listFolder(id) {
+      foldersScanned++;
+      let pageToken = null;
+      do {
+        const url = "https://www.googleapis.com/drive/v3/files"
+          + "?q=" + encodeURIComponent(`'${id}' in parents and trashed = false`)
+          + "&fields=" + encodeURIComponent("nextPageToken,files(id,name,mimeType,thumbnailLink,imageMediaMetadata)")
+          + "&pageSize=1000"
+          + (pageToken ? "&pageToken=" + pageToken : "");
+
+        const res = await fetch(url, { headers: { Authorization: "Bearer " + providerToken } });
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error("Erro da Drive API (" + res.status + "): " + body);
+        }
+        const data = await res.json();
+        for (const item of (data.files || [])) {
+          if (item.mimeType === FOLDER_MIME) {
+            await listFolder(item.id);
+          } else {
+            files.push(item);
+          }
+        }
+        pageToken = data.nextPageToken || null;
+      } while (pageToken);
+    }
+
     try {
-      const res = await fetch(url, { headers: { Authorization: "Bearer " + providerToken } });
-      if (!res.ok) {
-        const body = await res.text();
-        log("Erro da Drive API (" + res.status + "): " + body);
-        return;
-      }
-      const data = await res.json();
-      files = data.files || [];
+      await listFolder(folderId);
     } catch (err) {
-      log("Erro de rede ao chamar a Drive API: " + err.message);
+      log(err.message);
       return;
     }
 
-    log(files.length + " arquivo(s) encontrado(s). Criando a galeria e salvando...");
+    log(files.length + " arquivo(s) encontrado(s) em " + foldersScanned + " pasta(s). Criando a galeria e salvando...");
 
     let { data: galleries } = await sb
       .from("galleries")
@@ -241,8 +266,9 @@
     const grid = document.getElementById("asset-grid");
     grid.innerHTML = "";
 
+    let savedCount = 0;
     for (const file of files) {
-      await sb.from("assets").upsert({
+      const { error: assetError } = await sb.from("assets").upsert({
         gallery_id: galleryId,
         provider_file_id: file.id,
         filename: file.name,
@@ -250,6 +276,12 @@
         width: file.imageMediaMetadata ? file.imageMediaMetadata.width : null,
         height: file.imageMediaMetadata ? file.imageMediaMetadata.height : null
       }, { onConflict: "provider_file_id" });
+
+      if (assetError) {
+        log("Erro ao salvar \"" + file.name + "\": " + assetError.message);
+        continue;
+      }
+      savedCount++;
 
       if (file.thumbnailLink) {
         const img = document.createElement("img");
@@ -259,7 +291,7 @@
       }
     }
 
-    log("Sincronização concluída.");
+    log("Sincronização concluída. " + savedCount + " de " + files.length + " salvos em assets.");
   });
 
   sb.auth.getSession().then(({ data }) => {

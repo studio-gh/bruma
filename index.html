@@ -101,9 +101,27 @@
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === "SIGNED_IN" && session) {
       if (session.provider_token) providerToken = session.provider_token;
+      await checkTokenScope();
       await afterLogin(session);
     }
   });
+
+  // Diagnóstico: pergunta pro próprio Google quais escopos esse token realmente carrega.
+  async function checkTokenScope() {
+    if (!providerToken) { log("Diagnóstico: nenhum provider_token recebido do Supabase."); return; }
+    try {
+      const res = await fetch("https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=" + providerToken);
+      const data = await res.json();
+      if (data.scope) {
+        log("Diagnóstico: escopos concedidos ao token -> " + data.scope);
+        log("Diagnóstico: tem drive.readonly? " + (data.scope.includes("drive.readonly") ? "sim" : "NÃO"));
+      } else {
+        log("Diagnóstico: tokeninfo não retornou escopo. Resposta: " + JSON.stringify(data));
+      }
+    } catch (err) {
+      log("Diagnóstico: falha ao consultar tokeninfo: " + err.message);
+    }
+  }
 
   async function afterLogin(session) {
     if (loginHandled) return;

@@ -58,13 +58,13 @@
     log("Preencha SUPABASE_URL e SUPABASE_ANON_KEY no topo do arquivo antes de usar (Project Settings > API no Supabase).");
   }
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let providerToken = null;
   let currentWorkspaceId = null;
   let currentConnectionId = null;
 
   document.getElementById("login-btn").addEventListener("click", async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await sb.auth.signInWithOAuth({
       provider: "google",
       options: {
         scopes: "https://www.googleapis.com/auth/drive.readonly",
@@ -78,7 +78,7 @@
   // O provider_token (token de acesso do Google) só vem disponível
   // no evento disparado logo após o redirect do login, por isso
   // é capturado aqui em vez de em getSession() em outro momento.
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  sb.auth.onAuthStateChange(async (event, session) => {
     if (event === "SIGNED_IN" && session) {
       if (session.provider_token) providerToken = session.provider_token;
       await afterLogin(session);
@@ -91,14 +91,14 @@
     document.getElementById("user-info").textContent = "Logado como " + session.user.email;
 
     // Garante que existe um workspace para este usuário.
-    let { data: workspaces } = await supabase
+    let { data: workspaces } = await sb
       .from("workspaces")
       .select("id")
       .eq("owner_id", session.user.id)
       .limit(1);
 
     if (!workspaces || workspaces.length === 0) {
-      const { data: created, error } = await supabase
+      const { data: created, error } = await sb
         .from("workspaces")
         .insert({ owner_id: session.user.id, name: "Meu workspace" })
         .select("id")
@@ -116,7 +116,7 @@
     }
 
     // Salva (ou atualiza) a conexão com o Google Drive.
-    const { data: existingConn } = await supabase
+    const { data: existingConn } = await sb
       .from("cloud_connections")
       .select("id")
       .eq("workspace_id", currentWorkspaceId)
@@ -125,13 +125,13 @@
 
     if (existingConn && existingConn.length > 0) {
       currentConnectionId = existingConn[0].id;
-      await supabase
+      await sb
         .from("cloud_connections")
         .update({ access_token: providerToken })
         .eq("id", currentConnectionId);
       log("Conexão com o Google Drive atualizada.");
     } else {
-      const { data: conn, error } = await supabase
+      const { data: conn, error } = await sb
         .from("cloud_connections")
         .insert({
           workspace_id: currentWorkspaceId,
@@ -175,7 +175,7 @@
     log(files.length + " arquivo(s) encontrado(s). Criando a galeria e salvando...");
 
     // Garante uma galeria pra essa pasta.
-    let { data: galleries } = await supabase
+    let { data: galleries } = await sb
       .from("galleries")
       .select("id")
       .eq("folder_id", folderId)
@@ -185,7 +185,7 @@
     if (galleries && galleries.length > 0) {
       galleryId = galleries[0].id;
     } else {
-      const { data: gallery, error } = await supabase
+      const { data: gallery, error } = await sb
         .from("galleries")
         .insert({
           workspace_id: currentWorkspaceId,
@@ -204,7 +204,7 @@
     grid.innerHTML = "";
 
     for (const file of files) {
-      await supabase.from("assets").upsert({
+      await sb.from("assets").upsert({
         gallery_id: galleryId,
         provider_file_id: file.id,
         filename: file.name,
@@ -225,7 +225,7 @@
   });
 
   // Se a página recarregar depois do redirect do Google, confere se já existe sessão.
-  supabase.auth.getSession().then(({ data }) => {
+  sb.auth.getSession().then(({ data }) => {
     if (data.session) afterLogin(data.session);
   });
 </script>

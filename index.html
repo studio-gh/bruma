@@ -36,6 +36,18 @@
   .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin-top:4px;}
   .grid img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; background:var(--line); border:1px solid rgba(255,255,255,.8);}
   .hidden{display:none;}
+  #sync-status{font-size:13px; color:var(--ink-soft); margin:-8px 0 14px; min-height:18px;}
+  .progress-wrap{margin:-2px 0 18px;}
+  .progress-track{width:100%; height:8px; background:rgba(255,255,255,.65); border:1px solid rgba(255,255,255,.8); border-radius:999px; overflow:hidden;}
+  .progress-bar{height:100%; width:0%; background:var(--blue-deep); border-radius:999px; transition:width .2s ease;}
+  .progress-meta{display:flex; justify-content:space-between; gap:12px; margin-top:7px; font-size:12px; color:var(--ink-soft);}
+  .gallery-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .gallery-row:last-child{border-bottom:none;}
+  .gallery-row .meta{font-size:13px;}
+  .gallery-row .meta .title{font-weight:700; color:var(--ink);}
+  .gallery-row .meta .sub{color:var(--ink-soft);}
+  .remove-btn{background:none; border:1px solid rgba(200,80,80,.5); color:#B84C4C; padding:6px 14px; font-size:12px; border-radius:999px;}
+  .empty-note{color:var(--ink-soft); font-size:13px;}
 </style>
 </head>
 <body>
@@ -63,6 +75,16 @@
       <input id="folder-id" placeholder="ID da pasta do Google Drive">
       <button id="sync-btn">Sincronizar pasta</button>
     </div>
+    <div id="sync-status" class="hidden"></div>
+    <div id="sync-progress" class="progress-wrap hidden" aria-live="polite">
+      <div class="progress-track">
+        <div id="sync-progress-bar" class="progress-bar"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="sync-progress-label">Preparando sincronização...</span>
+        <span id="sync-progress-count">0%</span>
+      </div>
+    </div>
     <div class="grid" id="asset-grid"></div>
   </div>
 
@@ -74,6 +96,32 @@
     const el = document.getElementById("log");
     el.textContent += msg + "\n";
     el.scrollTop = el.scrollHeight;
+  }
+
+  function setSyncProgress(current, total, label) {
+    const status = document.getElementById("sync-status");
+    const progress = document.getElementById("sync-progress");
+    const bar = document.getElementById("sync-progress-bar");
+    const progressLabel = document.getElementById("sync-progress-label");
+    const progressCount = document.getElementById("sync-progress-count");
+
+    status.classList.remove("hidden");
+    progress.classList.remove("hidden");
+
+    const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+    bar.style.width = percent + "%";
+    progressLabel.textContent = label;
+    progressCount.textContent = percent + "%";
+  }
+
+  function finishSyncProgress(label) {
+    const bar = document.getElementById("sync-progress-bar");
+    const progressLabel = document.getElementById("sync-progress-label");
+    const progressCount = document.getElementById("sync-progress-count");
+
+    bar.style.width = "100%";
+    progressLabel.textContent = label;
+    progressCount.textContent = "100%";
   }
 
   if (SUPABASE_URL.includes("COLE_AQUI") || SUPABASE_ANON_KEY.includes("COLE_AQUI")) {
@@ -193,8 +241,15 @@
 
   document.getElementById("sync-btn").addEventListener("click", async () => {
     const folderId = document.getElementById("folder-id").value.trim();
+    const syncBtn = document.getElementById("sync-btn");
+    const grid = document.getElementById("asset-grid");
+
     if (!folderId) { log("Cole o ID de uma pasta do Drive primeiro."); return; }
     if (!providerToken) { log("Sem token do Google nesta sessão. Saia e entre de novo pra gerar um novo."); return; }
+
+    syncBtn.disabled = true;
+    grid.innerHTML = "";
+    setSyncProgress(0, 1, "Encontrando arquivos no Drive...");
 
     log("Buscando arquivos da pasta " + folderId + " (incluindo subpastas)...");
 
@@ -204,6 +259,8 @@
 
     async function listFolder(id) {
       foldersScanned++;
+      setSyncProgress(0, 1, "Encontrando arquivos... " + foldersScanned + " pasta(s) verificadas");
+
       let pageToken = null;
       do {
         const url = "https://www.googleapis.com/drive/v3/files"
@@ -217,14 +274,17 @@
           const body = await res.text();
           throw new Error("Erro da Drive API (" + res.status + "): " + body);
         }
+
         const data = await res.json();
         for (const item of (data.files || [])) {
           if (item.mimeType === FOLDER_MIME) {
             await listFolder(item.id);
           } else {
             files.push(item);
+            setSyncProgress(0, 1, files.length + " arquivo(s) encontrado(s)...");
           }
         }
+
         pageToken = data.nextPageToken || null;
       } while (pageToken);
     }
@@ -232,10 +292,14 @@
     try {
       await listFolder(folderId);
     } catch (err) {
+      syncBtn.disabled = false;
+      document.getElementById("sync-status").textContent = "A sincronização não foi concluída.";
+      document.getElementById("sync-progress").classList.add("hidden");
       log(err.message);
       return;
     }
 
+    setSyncProgress(0, Math.max(files.length, 1), "Preparando " + files.length + " arquivo(s) para salvar...");
     log(files.length + " arquivo(s) encontrado(s) em " + foldersScanned + " pasta(s). Criando a galeria e salvando...");
 
     let { data: galleries } = await sb
@@ -259,15 +323,21 @@
         })
         .select("id")
         .single();
-      if (error) { log("Erro ao criar galeria: " + error.message); return; }
+
+      if (error) {
+        syncBtn.disabled = false;
+        log("Erro ao criar galeria: " + error.message);
+        return;
+      }
+
       galleryId = gallery.id;
     }
 
-    const grid = document.getElementById("asset-grid");
-    grid.innerHTML = "";
-
     let savedCount = 0;
-    for (const file of files) {
+    let errorCount = 0;
+
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
       const { error: assetError } = await sb.from("assets").upsert({
         gallery_id: galleryId,
         provider_file_id: file.id,
@@ -278,20 +348,39 @@
       }, { onConflict: "provider_file_id" });
 
       if (assetError) {
+        errorCount++;
         log("Erro ao salvar \"" + file.name + "\": " + assetError.message);
-        continue;
-      }
-      savedCount++;
+      } else {
+        savedCount++;
 
-      if (file.thumbnailLink) {
-        const img = document.createElement("img");
-        img.src = file.thumbnailLink;
-        img.title = file.name;
-        grid.appendChild(img);
+        if (file.thumbnailLink) {
+          const img = document.createElement("img");
+          img.src = file.thumbnailLink;
+          img.title = file.name;
+          grid.appendChild(img);
+        }
       }
+
+      const completed = index + 1;
+      setSyncProgress(
+        completed,
+        Math.max(files.length, 1),
+        "Salvando arquivos... " + completed + " de " + files.length
+      );
+    }
+
+    if (files.length === 0) {
+      finishSyncProgress("Nenhum arquivo encontrado");
+      document.getElementById("sync-status").textContent = "A pasta não contém arquivos sincronizáveis.";
+    } else {
+      finishSyncProgress("Sincronização concluída");
+      document.getElementById("sync-status").textContent =
+        savedCount + " de " + files.length + " arquivo(s) salvo(s)" +
+        (errorCount > 0 ? " • " + errorCount + " com erro" : "");
     }
 
     log("Sincronização concluída. " + savedCount + " de " + files.length + " salvos em assets.");
+    syncBtn.disabled = false;
   });
 
   sb.auth.getSession().then(({ data }) => {

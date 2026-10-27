@@ -64,7 +64,8 @@
 
   <div class="card" id="login-section">
     <p>Entre com sua conta Google para conectar o Drive.</p>
-    <button id="login-btn">Entrar com Google</button>
+    <button id="login-btn" type="button">Entrar com Google</button>
+    <p id="login-status" role="status" aria-live="polite" style="margin:12px 0 0; white-space:pre-wrap;"></p>
   </div>
 
   <div class="card hidden" id="app-section">
@@ -172,29 +173,52 @@
   }
 
   async function startGoogleLogin() {
-    loginHandled = false;
-    clearGoogleTokens();
+    const button = document.getElementById("login-btn");
+    const status = document.getElementById("login-status");
 
-    await sb.auth.signOut();
+    button.disabled = true;
+    button.textContent = "Conectando ao Google...";
+    status.textContent = "Abrindo a autorização do Google. Aguarde.";
 
-    const { error } = await sb.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        scopes: "https://www.googleapis.com/auth/drive.readonly",
-        redirectTo:
-          window.location.origin + window.location.pathname,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent"
-        }
+    try {
+      loginHandled = false;
+      clearGoogleTokens();
+
+      const { error: signOutError } = await sb.auth.signOut({ scope: "local" });
+      if (signOutError) {
+        throw new Error("Não consegui preparar uma nova sessão: " + signOutError.message);
       }
-    });
 
-    if (error) {
-      log("Erro ao iniciar login: " + error.message);
+      const { data, error } = await sb.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          scopes: "https://www.googleapis.com/auth/drive.readonly",
+          redirectTo: window.location.origin + window.location.pathname,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent"
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data && data.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      throw new Error("O Supabase não retornou o endereço de autorização. Verifique a configuração do provedor Google no Supabase.");
+    } catch (err) {
+      const message = err && err.message ? err.message : String(err);
+      status.textContent = "Não foi possível iniciar o login.\n" + message;
+      log("Erro ao iniciar login: " + message);
+      button.disabled = false;
+      button.textContent = "Tentar novamente";
     }
   }
-
   document
     .getElementById("login-btn")
     .addEventListener("click", startGoogleLogin);

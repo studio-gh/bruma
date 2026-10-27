@@ -184,11 +184,8 @@
       loginHandled = false;
       clearGoogleTokens();
 
-      const { error: signOutError } = await sb.auth.signOut({ scope: "local" });
-      if (signOutError) {
-        throw new Error("Não consegui preparar uma nova sessão: " + signOutError.message);
-      }
-
+      // Não chamar signOut antes do OAuth: essa chamada pode falhar por rede
+      // e impedir que o fluxo de login seja iniciado.
       const { data, error } = await sb.auth.signInWithOAuth({
         provider: "google",
         options: {

@@ -11,8 +11,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "bruma",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+      "database_name": "bruma-db",
+      "database_id": "d2b94bc9-3554-4afc-8f34-bdb63b4ebf7d"
     }
   ]
 }

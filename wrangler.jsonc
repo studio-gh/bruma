@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bruma-api",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-30",
+  "vars": {
+    "APP_ORIGIN": "https://studio-gh.github.io",
+    "APP_URL": "https://studio-gh.github.io/bruma/",
+    "WORKER_URL": "https://bruma-api.studio-gh.workers.dev"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bruma-db",
+      "database_id": "d2b94bc9-3554-4afc-8f34-bdb63b4ebf7d"
+    }
+  ]
+}

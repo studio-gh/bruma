@@ -7,761 +7,94 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{
-    --sky-top:#4A8FD6; --sky-mid:#8FC1EA; --sky-bottom:#EEF6FC;
-    --ink:#233240; --ink-soft:#5C7286; --blue-deep:#2E6CA8;
-    --line:#D7E6F2; --glass:rgba(255,255,255,.75);
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; min-height:100vh; color:var(--ink); font-family:'DM Sans',system-ui,sans-serif; line-height:1.55;
-    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 40%, var(--sky-bottom) 100%);
-  }
-  .wrap{max-width:640px; margin:0 auto; padding:56px 20px 80px;}
-  .kicker{color:#fff; font-weight:700; font-size:12px; letter-spacing:.14em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.15);}
-  h1{font-family:'Fraunces',serif; font-weight:700; color:#fff; font-size:28px; margin:8px 0 28px; text-shadow:0 2px 12px rgba(0,40,80,.18);}
-
-  .card{background:var(--glass); border:1px solid rgba(255,255,255,.8); border-radius:18px; padding:24px; margin-bottom:18px; box-shadow:0 14px 34px -22px rgba(0,40,80,.35);}
-  .card p{margin:0 0 14px; color:var(--ink-soft); font-size:14px;}
-  #user-info{color:var(--ink); font-weight:700; font-size:14px; margin-bottom:18px;}
-
-  button{background:var(--blue-deep); color:#fff; border:none; border-radius:999px; padding:11px 22px; font-weight:700; cursor:pointer; font-size:14px;}
-  button:disabled{opacity:.5; cursor:default;}
-  input{border:1px solid var(--line); background:#fff; border-radius:8px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; color:var(--ink); width:260px;}
-  .row{display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap;}
-
-  .log{background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.8); border-radius:14px; padding:16px; font-size:13px; color:var(--ink-soft); white-space:pre-wrap; max-height:220px; overflow:auto; font-family:ui-monospace,monospace;}
-  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin-top:4px;}
-  .grid img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; background:var(--line); border:1px solid rgba(255,255,255,.8);}
-  .hidden{display:none;}
-  #sync-status{font-size:13px; color:var(--ink-soft); margin:-8px 0 14px; min-height:18px;}
-  .progress-wrap{margin:-2px 0 18px;}
-  .progress-track{width:100%; height:8px; background:rgba(255,255,255,.65); border:1px solid rgba(255,255,255,.8); border-radius:999px; overflow:hidden;}
-  .progress-bar{height:100%; width:0%; background:var(--blue-deep); border-radius:999px; transition:width .2s ease;}
-  .progress-meta{display:flex; justify-content:space-between; gap:12px; margin-top:7px; font-size:12px; color:var(--ink-soft);}
-  .gallery-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
-  .gallery-row:last-child{border-bottom:none;}
-  .gallery-row .meta{font-size:13px;}
-  .gallery-row .meta .title{font-weight:700; color:var(--ink);}
-  .gallery-row .meta .sub{color:var(--ink-soft);}
-  .remove-btn{background:none; border:1px solid rgba(200,80,80,.5); color:#B84C4C; padding:6px 14px; font-size:12px; border-radius:999px;}
-  .session-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px;}
-  .logout-btn{background:rgba(255,255,255,.55); color:var(--ink-soft); border:1px solid rgba(92,114,134,.25); padding:7px 14px; font-size:12px;}
-  .empty-note{color:var(--ink-soft); font-size:13px;}
+:root{--sky-top:#4A8FD6;--sky-mid:#8FC1EA;--sky-bottom:#EEF6FC;--ink:#233240;--ink-soft:#5C7286;--blue-deep:#2E6CA8;--line:#D7E6F2;--glass:rgba(255,255,255,.78)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;line-height:1.55;background:linear-gradient(180deg,var(--sky-top),var(--sky-mid) 40%,var(--sky-bottom))}
+.wrap{max-width:760px;margin:0 auto;padding:48px 20px 80px}.kicker{color:#fff;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-shadow:0 1px 6px #0003}
+h1{font-family:'Fraunces',serif;color:#fff;font-size:30px;margin:8px 0 28px;text-shadow:0 2px 12px #00285030}h2{font-size:17px;margin:0 0 12px}
+.card{background:var(--glass);border:1px solid #ffffffcc;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 14px 34px -22px #00285059}.card p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
+button{background:var(--blue-deep);color:white;border:0;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;font-size:14px}button:disabled{opacity:.5;cursor:wait}
+input{border:1px solid var(--line);background:white;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;color:var(--ink);min-width:0;flex:1}.row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.session-row{display:flex;justify-content:space-between;align-items:center;gap:12px}#user-info{color:var(--ink);font-weight:700;font-size:14px}
+.logout-btn{background:#ffffff99;color:var(--ink-soft);border:1px solid #5c728640;padding:7px 14px;font-size:12px}
+.log{background:#ffffff99;border:1px solid #ffffffcc;border-radius:14px;padding:14px;font-size:12px;color:var(--ink-soft);white-space:pre-wrap;max-height:200px;overflow:auto;font-family:ui-monospace,monospace}
+.hidden{display:none!important}#sync-status{font-size:13px;color:var(--ink-soft);margin:0 0 12px;min-height:18px}
+.progress-wrap{margin:0 0 18px}.progress-track{width:100%;height:8px;background:#ffffffa6;border:1px solid #ffffffcc;border-radius:99px;overflow:hidden}.progress-bar{height:100%;width:0;background:var(--blue-deep);border-radius:99px;transition:width .2s}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin-top:6px;font-size:12px;color:var(--ink-soft)}
+.gallery-list{display:grid;gap:9px;margin-top:12px}.gallery-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#ffffff70}
+.gallery-item strong{display:block;font-size:13px}.gallery-item small{display:block;color:var(--ink-soft);font-size:11px}.gallery-actions{display:flex;gap:7px;flex-shrink:0}
+.secondary{background:#ffffffa8;color:var(--blue-deep);border:1px solid var(--line);padding:7px 12px;font-size:12px}.remove-btn{background:transparent;border:1px solid #c8505080;color:#b84c4c;padding:7px 12px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:9px;margin-top:14px}.asset{min-width:0}.asset img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--line);border:1px solid #ffffffcc}.asset small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft);font-size:11px;margin-top:4px}
+.empty-note{font-size:13px;color:var(--ink-soft)}@media(max-width:520px){.wrap{padding:32px 14px 56px}.card{padding:18px}.row button{width:100%}.gallery-actions button{padding:7px 9px}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="kicker">Bruma</div>
-  <h1>Painel de sincronização</h1>
-
-  <script>
-    const SUPABASE_URL = "https://wccbsykrswcxnckcasea.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_05vKj-uq-oo0zbTWKUDITw_qYsJZnCd";
-  </script>
-
-  <div class="card" id="login-section">
-    <p>Entre com sua conta Google para conectar o Drive.</p>
-    <button id="login-btn" type="button">Entrar com Google</button>
-    <p id="login-status" role="status" aria-live="polite" style="margin:12px 0 0; white-space:pre-wrap;"></p>
-  </div>
-
-  <div class="card hidden" id="app-section">
-    <div class="session-row">
-      <p id="user-info"></p>
-      <button id="logout-btn" class="logout-btn">Sair</button>
-    </div>
-
-    <div class="row">
-      <input id="folder-id" placeholder="ID da pasta do Google Drive">
-      <button id="sync-btn">Sincronizar pasta</button>
-    </div>
-
-    <div id="sync-status" class="hidden"></div>
-
-    <div id="sync-progress" class="progress-wrap hidden" aria-live="polite">
-      <div class="progress-track">
-        <div id="sync-progress-bar" class="progress-bar"></div>
-      </div>
-      <div class="progress-meta">
-        <span id="sync-progress-label">Preparando sincronização...</span>
-        <span id="sync-progress-count">0%</span>
-      </div>
-    </div>
-
-    <div class="grid" id="asset-grid"></div>
-  </div>
-
-  <div class="log" id="log"></div>
-</div>
-
+<main class="wrap">
+<div class="kicker">Bruma</div><h1>Painel de sincronização</h1>
+<section class="card" id="login-section"><p>Entre com sua conta Google para conectar o Drive.</p><button id="login-btn" type="button">Entrar com Google</button><p id="login-status" role="status" aria-live="polite" style="margin:12px 0 0;white-space:pre-wrap"></p></section>
+<section class="card hidden" id="app-section">
+<div class="session-row"><p id="user-info"></p><button id="logout-btn" class="logout-btn" type="button">Sair</button></div>
+<h2>Sincronizar uma pasta</h2><div class="row"><input id="folder-id" autocomplete="off" placeholder="ID da pasta do Google Drive" aria-label="ID da pasta do Google Drive"><button id="sync-btn" type="button">Sincronizar pasta</button></div>
+<div id="sync-status" class="hidden" role="status" aria-live="polite"></div>
+<div id="sync-progress" class="progress-wrap hidden" aria-live="polite"><div class="progress-track"><div id="sync-progress-bar" class="progress-bar"></div></div><div class="progress-meta"><span id="sync-progress-label">Preparando sincronização...</span><span id="sync-progress-count">0%</span></div></div>
+<h2>Suas galerias</h2><div id="gallery-list" class="gallery-list"><p class="empty-note">Carregando galerias...</p></div><h2 style="margin-top:22px">Arquivos</h2><div class="grid" id="asset-grid"></div>
+</section>
+<div class="log" id="log" role="log" aria-live="polite">Bruma conectado à nova infraestrutura Cloudflare.</div>
+</main>
 <script>
-  function log(msg) {
-    const el = document.getElementById("log");
-    el.textContent += msg + "\n";
-    el.scrollTop = el.scrollHeight;
+const API_BASE="https://bruma-api.studio-gh.workers.dev",SESSION_KEY="bruma_session_token";
+let sessionToken=sessionStorage.getItem(SESSION_KEY),currentUser=null;
+const $=id=>document.getElementById(id);
+function log(message){$("log").textContent+="\n"+message;$("log").scrollTop=$("log").scrollHeight}
+function busy(button,value,label){button.disabled=value;if(label)button.textContent=label}
+function progress(current,total,label){$("sync-status").classList.remove("hidden");$("sync-progress").classList.remove("hidden");const pct=total?Math.min(100,Math.round(current/total*100)):0;$("sync-progress-bar").style.width=pct+"%";$("sync-progress-label").textContent=label;$("sync-progress-count").textContent=pct+"%"}
+async function api(path,options={}){const headers=new Headers(options.headers||{});if(sessionToken)headers.set("Authorization","Bearer "+sessionToken);if(options.body)headers.set("Content-Type","application/json");const res=await fetch(API_BASE+path,{...options,headers,cache:"no-store"});const data=await res.json().catch(()=>({}));if(!res.ok){const err=new Error(data.error||"Erro na API ("+res.status+")");err.status=res.status;throw err}return data}
+function clearSession(){sessionToken=null;currentUser=null;sessionStorage.removeItem(SESSION_KEY)}
+function showLogin(message=""){$("login-section").classList.remove("hidden");$("app-section").classList.add("hidden");$("login-status").textContent=message;busy($("login-btn"),false,"Entrar com Google")}
+function showApp(){ $("login-section").classList.add("hidden");$("app-section").classList.remove("hidden");$("user-info").textContent=currentUser?.name?currentUser.name+" · "+currentUser.email:(currentUser?.email||"Sessão ativa")}
+async function loadGalleries(){const data=await api("/api/galleries"),list=$("gallery-list");list.innerHTML="";if(!data.galleries?.length){list.innerHTML='<p class="empty-note">Ainda não há galerias. Cole o ID de uma pasta do Drive para começar.</p>';return}
+for(const g of data.galleries){const row=document.createElement("div");row.className="gallery-item";const info=document.createElement("div"),title=document.createElement("strong"),meta=document.createElement("small");title.textContent=g.title||"Galeria";meta.textContent=(g.asset_count||0)+" arquivo(s) · "+g.folder_id;info.append(title,meta);const actions=document.createElement("div");actions.className="gallery-actions";const open=document.createElement("button");open.className="secondary";open.textContent="Abrir";open.addEventListener("click",()=>loadAssets(g.id));const del=document.createElement("button");del.className="remove-btn";del.textContent="Excluir";del.addEventListener("click",()=>deleteGallery(g.id,g.title));actions.append(open,del);row.append(info,actions);list.append(row)}}
+async function loadAssets(id){const data=await api("/api/galleries/"+encodeURIComponent(id)+"/assets"),grid=$("asset-grid");grid.innerHTML="";for(const a of data.assets||[]){const figure=document.createElement("div");figure.className="asset";if(a.thumbnail_url){const img=document.createElement("img");img.src=a.thumbnail_url;img.alt=a.filename||"Arquivo do Drive";img.loading="lazy";figure.append(img)}else{const no=document.createElement("small");no.textContent="Sem miniatura";figure.append(no)}const name=document.createElement("small");name.textContent=a.filename||"";figure.append(name);grid.append(figure)}log((data.assets||[]).length+" arquivo(s) carregados.")}
+async function deleteGallery(id,title){if(!confirm('Excluir a galeria "'+(title||"sem título")+'" e seus registros?'))return;try{await api("/api/galleries/"+encodeURIComponent(id),{method:"DELETE"});$("asset-grid").innerHTML="";await loadGalleries();log("Galeria excluída.")}catch(e){log("Falha ao excluir galeria: "+e.message)}}
+async function exchangeCode(){const url=new URL(location.href),code=url.searchParams.get("bruma_code");if(!code)return false;url.searchParams.delete("bruma_code");history.replaceState({},document.title,url.pathname+url.search+url.hash);busy($("login-btn"),true,"Finalizando login...");try{const data=await api("/auth/exchange",{method:"POST",body:JSON.stringify({code})});if(!data.token)throw new Error("Servidor não retornou sessão.");sessionToken=data.token;sessionStorage.setItem(SESSION_KEY,sessionToken);return true}catch(e){clearSession();showLogin("Não foi possível finalizar o login. "+e.message);log("Falha ao trocar código de login: "+e.message);return false}}
+async function restoreSession(){if(!sessionToken)return false;try{const data=await api("/auth/me");currentUser=data.user;showApp();await loadGalleries();log("Sessão restaurada.");return true}catch(e){clearSession();if(e.status!==401)log("Falha ao restaurar sessão: "+e.message);return false}}
+$("login-btn").addEventListener("click",()=>{busy($("login-btn"),true,"Abrindo Google...");$("login-status").textContent="Redirecionando para a autorização segura do Google...";location.assign(API_BASE+"/auth/google")});
+$("logout-btn").addEventListener("click",async()=>{try{await api("/auth/logout",{method:"POST"})}catch(e){log("Aviso ao encerrar sessão: "+e.message)}clearSession();$("asset-grid").innerHTML="";$("gallery-list").innerHTML="";showLogin("Sessão encerrada.");log("Sessão encerrada.")});
+$("sync-btn").addEventListener("click",async()=>{const folder=$("folder-id").value.trim(),button=$("sync-btn");if(!folder){log("Cole o ID de uma pasta do Drive primeiro.");return}busy(button,true,"Sincronizando...");$("asset-grid").innerHTML="";progress(0,1,"Buscando arquivos no Google Drive...");log("Iniciando sincronização da pasta "+folder+" e suas subpastas.");try{progress(1,2,"Lendo pasta e registrando arquivos...");const result=await api("/api/sync",{method:"POST",body:JSON.stringify({folder_id:folder})});progress(2,2,"Sincronização concluída.");$("sync-status").textContent=result.files_saved+" de "+result.files_found+" arquivo(s) registrados.";await loadAssets(result.gallery_id);await loadGalleries();log("Concluído: "+result.files_saved+" arquivo(s), "+result.folders_scanned+" pasta(s) verificada(s).")}catch(e){$("sync-status").textContent="A sincronização não foi concluída.";$("sync-progress").classList.add("hidden");log("Erro na sincronização: "+e.message);if(e.status===401){clearSession();showLogin("Sua sessão expirou. Entre novamente.")}}finally{busy(button,false,"Sincronizar pasta")}});
+function handleOAuthError(){
+  const url = new URL(location.href);
+  const error = url.searchParams.get("error");
+  const description = url.searchParams.get("error_description");
+  if (!error) return false;
+  url.searchParams.delete("error");
+  url.searchParams.delete("error_description");
+  url.searchParams.delete("state");
+  history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+  const messages = {
+    access_denied: "A autorização do Google foi cancelada. Você pode tentar novamente quando quiser.",
+    invalid_request: "O Google recusou a solicitação de login. Confira a configuração OAuth do projeto.",
+    oauth_failed: "Não foi possível concluir o login com o Google. Tente novamente.",
+    server_error: "O Bruma encontrou um erro ao concluir o login. Tente novamente em instantes."
+  };
+  const message = messages[error] || "Não foi possível concluir a autorização do Google.";
+  showLogin(message);
+  log(message + (description ? " Detalhe: " + description : ""));
+  return true;
+}
+
+(async()=>{
+  try {
+    if (handleOAuthError()) return;
+    const exchanged = await exchangeCode();
+    if (exchanged && await restoreSession()) return;
+    if (!exchanged && new URL(location.href).searchParams.has("bruma_code")) return;
+    if (await restoreSession()) return;
+    showLogin();
+  } catch(e) {
+    showLogin(e.message || "Não foi possível iniciar o Bruma.");
+    log("Falha ao iniciar Bruma: " + (e.message || String(e)));
   }
-
-  function setSyncProgress(current, total, label) {
-    const status = document.getElementById("sync-status");
-    const progress = document.getElementById("sync-progress");
-    const bar = document.getElementById("sync-progress-bar");
-    const progressLabel = document.getElementById("sync-progress-label");
-    const progressCount = document.getElementById("sync-progress-count");
-
-    status.classList.remove("hidden");
-    progress.classList.remove("hidden");
-
-    const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
-
-    bar.style.width = percent + "%";
-    progressLabel.textContent = label;
-    progressCount.textContent = percent + "%";
-  }
-
-  function finishSyncProgress(label) {
-    const bar = document.getElementById("sync-progress-bar");
-    const progressLabel = document.getElementById("sync-progress-label");
-    const progressCount = document.getElementById("sync-progress-count");
-
-    bar.style.width = "100%";
-    progressLabel.textContent = label;
-    progressCount.textContent = "100%";
-  }
-
-  const sb = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
-
-  let providerToken =
-    sessionStorage.getItem("bruma_google_access_token") || null;
-
-  let providerRefreshToken =
-    sessionStorage.getItem("bruma_google_refresh_token") || null;
-
-  let currentWorkspaceId = null;
-  let currentConnectionId = null;
-  let loginHandled = false;
-
-  function saveGoogleTokens(session) {
-    if (session && session.provider_token) {
-      providerToken = session.provider_token;
-      sessionStorage.setItem(
-        "bruma_google_access_token",
-        providerToken
-      );
-    }
-
-    if (session && session.provider_refresh_token) {
-      providerRefreshToken = session.provider_refresh_token;
-      sessionStorage.setItem(
-        "bruma_google_refresh_token",
-        providerRefreshToken
-      );
-    }
-  }
-
-  function clearGoogleTokens() {
-    providerToken = null;
-    providerRefreshToken = null;
-
-    sessionStorage.removeItem("bruma_google_access_token");
-    sessionStorage.removeItem("bruma_google_refresh_token");
-  }
-
-  async function startGoogleLogin() {
-    const button = document.getElementById("login-btn");
-    const status = document.getElementById("login-status");
-
-    button.disabled = true;
-    button.textContent = "Conectando ao Google...";
-    status.textContent = "Abrindo a autorização do Google. Aguarde.";
-
-    try {
-      loginHandled = false;
-      clearGoogleTokens();
-
-      // Não chamar signOut antes do OAuth: essa chamada pode falhar por rede
-      // e impedir que o fluxo de login seja iniciado.
-      const { data, error } = await sb.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          scopes: "https://www.googleapis.com/auth/drive.readonly",
-          redirectTo: window.location.origin + window.location.pathname,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent"
-          }
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data && data.url) {
-        window.location.assign(data.url);
-        return;
-      }
-
-      throw new Error("O Supabase não retornou o endereço de autorização. Verifique a configuração do provedor Google no Supabase.");
-    } catch (err) {
-      const message = err && err.message ? err.message : String(err);
-      status.textContent = "Não foi possível iniciar o login.\n" + message;
-      log("Erro ao iniciar login: " + message);
-      button.disabled = false;
-      button.textContent = "Tentar novamente";
-    }
-  }
-  document
-    .getElementById("login-btn")
-    .addEventListener("click", startGoogleLogin);
-
-  document
-    .getElementById("logout-btn")
-    .addEventListener("click", async () => {
-      loginHandled = false;
-      clearGoogleTokens();
-
-      currentWorkspaceId = null;
-      currentConnectionId = null;
-
-      const { error } = await sb.auth.signOut();
-
-      if (error) {
-        log("Erro ao sair: " + error.message);
-        return;
-      }
-
-      document
-        .getElementById("app-section")
-        .classList.add("hidden");
-
-      document
-        .getElementById("login-section")
-        .classList.remove("hidden");
-
-      document
-        .getElementById("sync-status")
-        .classList.add("hidden");
-
-      document
-        .getElementById("sync-progress")
-        .classList.add("hidden");
-
-      document.getElementById("asset-grid").innerHTML = "";
-
-      document.getElementById("log").textContent =
-        "Sessão encerrada.\n";
-    });
-
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_OUT") {
-      loginHandled = false;
-      clearGoogleTokens();
-
-      document
-        .getElementById("app-section")
-        .classList.add("hidden");
-
-      document
-        .getElementById("login-section")
-        .classList.remove("hidden");
-
-      return;
-    }
-
-    if (
-      (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
-      session
-    ) {
-      saveGoogleTokens(session);
-    }
-
-    if (session && providerToken && !loginHandled) {
-      await checkTokenScope();
-      await afterLogin(session);
-    } else if (
-      session &&
-      !providerToken &&
-      event === "SIGNED_IN"
-    ) {
-      log(
-        "A sessão do Google foi criada, mas a autorização do Drive não chegou ao navegador. Clique em Sair e entre novamente."
-      );
-    }
-  });
-
-  async function checkTokenScope() {
-    if (!providerToken) return;
-
-    try {
-      const res = await fetch(
-        "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=" +
-        encodeURIComponent(providerToken)
-      );
-
-      const data = await res.json();
-
-      if (data.scope) {
-        log("Diagnóstico: autorização do Drive recebida.");
-
-        log(
-          "Diagnóstico: tem drive.readonly? " +
-          (
-            data.scope.includes("drive.readonly")
-              ? "sim"
-              : "NÃO"
-          )
-        );
-      } else {
-        log(
-          "Diagnóstico: a autorização do Google não pôde ser validada. Entre novamente."
-        );
-      }
-    } catch (err) {
-      log(
-        "Diagnóstico: falha ao validar a autorização do Google: " +
-        err.message
-      );
-    }
-  }
-
-  async function afterLogin(session) {
-    if (loginHandled || !providerToken) return;
-
-    loginHandled = true;
-
-    document
-      .getElementById("login-section")
-      .classList.add("hidden");
-
-    document
-      .getElementById("app-section")
-      .classList.remove("hidden");
-
-    document.getElementById("user-info").textContent =
-      "Logado como " + session.user.email;
-
-    let { data: workspaces } = await sb
-      .from("workspaces")
-      .select("id")
-      .eq("owner_id", session.user.id)
-      .limit(1);
-
-    if (!workspaces || workspaces.length === 0) {
-      const { data: created, error } = await sb
-        .from("workspaces")
-        .insert({
-          owner_id: session.user.id,
-          name: "Meu workspace"
-        })
-        .select("id")
-        .single();
-
-      if (error) {
-        log(
-          "Erro ao criar workspace: " +
-          error.message
-        );
-        return;
-      }
-
-      currentWorkspaceId = created.id;
-      log("Workspace criado.");
-    } else {
-      currentWorkspaceId = workspaces[0].id;
-    }
-
-    const { data: existingConn } = await sb
-      .from("cloud_connections")
-      .select("id")
-      .eq("workspace_id", currentWorkspaceId)
-      .eq("provider", "google_drive")
-      .limit(1);
-
-    if (existingConn && existingConn.length > 0) {
-      currentConnectionId = existingConn[0].id;
-
-      await sb
-        .from("cloud_connections")
-        .update({
-          access_token: providerToken,
-          ...(providerRefreshToken
-            ? {
-                refresh_token:
-                  providerRefreshToken
-              }
-            : {})
-        })
-        .eq("id", currentConnectionId);
-
-      log(
-        "Conexão com o Google Drive atualizada." +
-        (
-          providerRefreshToken
-            ? " Refresh token recebido e salvo."
-            : ""
-        )
-      );
-    } else {
-      const { data: conn, error } = await sb
-        .from("cloud_connections")
-        .insert({
-          workspace_id: currentWorkspaceId,
-          provider: "google_drive",
-          access_token: providerToken,
-          refresh_token: providerRefreshToken
-        })
-        .select("id")
-        .single();
-
-      if (error) {
-        log(
-          "Erro ao salvar conexão: " +
-          error.message
-        );
-        return;
-      }
-
-      currentConnectionId = conn.id;
-
-      log(
-        "Conexão com o Google Drive criada."
-      );
-    }
-  }
-
-  document
-    .getElementById("sync-btn")
-    .addEventListener("click", async () => {
-      const folderId =
-        document
-          .getElementById("folder-id")
-          .value
-          .trim();
-
-      const syncBtn =
-        document.getElementById("sync-btn");
-
-      const grid =
-        document.getElementById("asset-grid");
-
-      if (!folderId) {
-        log(
-          "Cole o ID de uma pasta do Drive primeiro."
-        );
-        return;
-      }
-
-      if (!providerToken) {
-        log(
-          "Sem token do Google nesta sessão. Saia e entre de novo pra gerar um novo."
-        );
-        return;
-      }
-
-      syncBtn.disabled = true;
-      grid.innerHTML = "";
-
-      setSyncProgress(
-        0,
-        1,
-        "Encontrando arquivos no Drive..."
-      );
-
-      log(
-        "Buscando arquivos da pasta " +
-        folderId +
-        " (incluindo subpastas)..."
-      );
-
-      const FOLDER_MIME =
-        "application/vnd.google-apps.folder";
-
-      let files = [];
-      let foldersScanned = 0;
-
-      async function listFolder(id) {
-        foldersScanned++;
-
-        setSyncProgress(
-          0,
-          1,
-          "Encontrando arquivos... " +
-          foldersScanned +
-          " pasta(s) verificadas"
-        );
-
-        let pageToken = null;
-
-        do {
-          const url =
-            "https://www.googleapis.com/drive/v3/files" +
-            "?q=" +
-            encodeURIComponent(
-              `'${id}' in parents and trashed = false`
-            ) +
-            "&fields=" +
-            encodeURIComponent(
-              "nextPageToken,files(id,name,mimeType,thumbnailLink,imageMediaMetadata)"
-            ) +
-            "&pageSize=1000" +
-            (
-              pageToken
-                ? "&pageToken=" + pageToken
-                : ""
-            );
-
-          const res = await fetch(url, {
-            headers: {
-              Authorization:
-                "Bearer " + providerToken
-            }
-          });
-
-          if (!res.ok) {
-            const body = await res.text();
-
-            throw new Error(
-              "Erro da Drive API (" +
-              res.status +
-              "): " +
-              body
-            );
-          }
-
-          const data = await res.json();
-
-          for (const item of (data.files || [])) {
-            if (item.mimeType === FOLDER_MIME) {
-              await listFolder(item.id);
-            } else {
-              files.push(item);
-
-              setSyncProgress(
-                0,
-                1,
-                files.length +
-                " arquivo(s) encontrado(s)..."
-              );
-            }
-          }
-
-          pageToken =
-            data.nextPageToken || null;
-
-        } while (pageToken);
-      }
-
-      try {
-        await listFolder(folderId);
-      } catch (err) {
-        syncBtn.disabled = false;
-
-        document.getElementById(
-          "sync-status"
-        ).textContent =
-          "A sincronização não foi concluída.";
-
-        document
-          .getElementById("sync-progress")
-          .classList.add("hidden");
-
-        log(err.message);
-        return;
-      }
-
-      setSyncProgress(
-        0,
-        Math.max(files.length, 1),
-        "Preparando " +
-        files.length +
-        " arquivo(s) para salvar..."
-      );
-
-      log(
-        files.length +
-        " arquivo(s) encontrado(s) em " +
-        foldersScanned +
-        " pasta(s). Criando a galeria e salvando..."
-      );
-
-      let { data: galleries } = await sb
-        .from("galleries")
-        .select("id")
-        .eq("folder_id", folderId)
-        .limit(1);
-
-      let galleryId;
-
-      if (galleries && galleries.length > 0) {
-        galleryId = galleries[0].id;
-      } else {
-        const {
-          data: gallery,
-          error
-        } = await sb
-          .from("galleries")
-          .insert({
-            workspace_id:
-              currentWorkspaceId,
-            cloud_connection_id:
-              currentConnectionId,
-            title:
-              "Pasta " + folderId,
-            slug:
-              "pasta-" +
-              folderId
-                .slice(0, 8)
-                .toLowerCase(),
-            folder_id:
-              folderId
-          })
-          .select("id")
-          .single();
-
-        if (error) {
-          syncBtn.disabled = false;
-
-          log(
-            "Erro ao criar galeria: " +
-            error.message
-          );
-
-          return;
-        }
-
-        galleryId = gallery.id;
-      }
-
-      let savedCount = 0;
-      let errorCount = 0;
-
-      for (
-        let index = 0;
-        index < files.length;
-        index++
-      ) {
-        const file = files[index];
-
-        const {
-          error: assetError
-        } = await sb
-          .from("assets")
-          .upsert(
-            {
-              gallery_id:
-                galleryId,
-              provider_file_id:
-                file.id,
-              filename:
-                file.name,
-              thumbnail_url:
-                file.thumbnailLink ||
-                null,
-              width:
-                file.imageMediaMetadata
-                  ? file.imageMediaMetadata.width
-                  : null,
-              height:
-                file.imageMediaMetadata
-                  ? file.imageMediaMetadata.height
-                  : null
-            },
-            {
-              onConflict:
-                "provider_file_id"
-            }
-          );
-
-        if (assetError) {
-          errorCount++;
-
-          log(
-            "Erro ao salvar \"" +
-            file.name +
-            "\": " +
-            assetError.message
-          );
-        } else {
-          savedCount++;
-
-          if (file.thumbnailLink) {
-            const img =
-              document.createElement(
-                "img"
-              );
-
-            img.src =
-              file.thumbnailLink;
-
-            img.title =
-              file.name;
-
-            grid.appendChild(img);
-          }
-        }
-
-        const completed =
-          index + 1;
-
-        setSyncProgress(
-          completed,
-          Math.max(
-            files.length,
-            1
-          ),
-          "Salvando arquivos... " +
-          completed +
-          " de " +
-          files.length
-        );
-      }
-
-      if (files.length === 0) {
-        finishSyncProgress(
-          "Nenhum arquivo encontrado"
-        );
-
-        document.getElementById(
-          "sync-status"
-        ).textContent =
-          "A pasta não contém arquivos sincronizáveis.";
-      } else {
-        finishSyncProgress(
-          "Sincronização concluída"
-        );
-
-        document.getElementById(
-          "sync-status"
-        ).textContent =
-          savedCount +
-          " de " +
-          files.length +
-          " arquivo(s) salvo(s)" +
-          (
-            errorCount > 0
-              ? " • " +
-                errorCount +
-                " com erro"
-              : ""
-          );
-      }
-
-      log(
-        "Sincronização concluída. " +
-        savedCount +
-        " de " +
-        files.length +
-        " salvos em assets."
-      );
-
-      syncBtn.disabled = false;
-    });
+})();
 </script>
 </body>
 </html>

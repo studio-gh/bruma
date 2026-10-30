@@ -340,7 +340,7 @@ async function route(req, env) {
     try {
       const result = await env.DB.prepare("SELECT 1 AS ok").first();
       if (result?.ok !== 1) throw new Error("D1 health query returned an unexpected result");
-      return json({ app: "Bruma API", status: "online", database: "connected", version: "d1-v1" });
+      return json({ app: "Bruma API", status: "online", database: "connected", version: "d1-v1", build: "bruma-cloudflare-migration-20261030-a" });
     } catch (error) {
       console.error("Bruma D1 health check failed:", error);
       return json({ app: "Bruma API", status: "degraded", database: "unavailable" }, 503);

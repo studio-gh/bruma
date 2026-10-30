@@ -84,7 +84,7 @@ async function userFromGoogle(env, profile) {
   if (!workspace) {
     const id = token(16);
     await env.DB.prepare("INSERT INTO workspaces (id, owner_id, name) VALUES (?, ?, ?)")
-      .bind(id, user.id, "Meu Bruma").run();
+      .bind(id, user.id, "Meu workspace").run();
     workspace = { id };
   }
   return { user, workspace };
@@ -268,6 +268,8 @@ async function sync(req, env, user) {
       file.mimeType || null, file.id
     ];
     if (old) {
+      // Keep a Drive file in its current gallery only when the same file was already indexed there.
+      // The provider_file_id is globally unique in D1, so a sync cannot create duplicate records.
       await env.DB.prepare(`
         UPDATE assets SET gallery_id = ?, filename = ?, thumbnail_url = ?, width = ?, height = ?,
           mime_type = ?, updated_at = datetime('now') WHERE provider_file_id = ?

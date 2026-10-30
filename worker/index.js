@@ -35,6 +35,7 @@ async function decrypt(value, secret) {
 function checkOrigin(req, env) {
   const origin = req.headers.get("Origin");
   if (origin && origin !== env.APP_ORIGIN) throw new HttpError(403, "Origin not allowed");
+  return origin;
 }
 function cookie(req, name) {
   const part = (req.headers.get("Cookie") || "").split(";").map(x => x.trim()).find(x => x.startsWith(name + "="));
@@ -270,11 +271,6 @@ async function sync(req, env, user) {
   for (const file of files) {
     const old = await env.DB.prepare("SELECT id FROM assets WHERE provider_file_id = ? AND gallery_id = ? LIMIT 1")
       .bind(file.id, gallery.id).first();
-    const values = [
-      gallery.id, file.name, file.thumbnailLink || null,
-      file.imageMediaMetadata?.width || null, file.imageMediaMetadata?.height || null,
-      file.mimeType || null, file.id
-    ];
     if (old) {
       // Keep a Drive file in its current gallery only when the same file was already indexed there.
       // The provider_file_id is globally unique in D1, so a sync cannot create duplicate records.

@@ -233,7 +233,10 @@ async function collectFiles(access, root) {
       });
       if (page) p.set("pageToken", page);
       const result = await driveJson(access, "https://www.googleapis.com/drive/v3/files?" + p);
-      for (const file of result.files || []) file.mimeType === folderType ? queue.push(file.id) : files.push(file);
+      for (const file of result.files || []) {
+        if (file.mimeType === folderType) queue.push(file.id);
+        else if (typeof file.mimeType === "string" && file.mimeType.startsWith("image/")) files.push(file);
+      }
       page = result.nextPageToken || null;
     } while (page);
   }

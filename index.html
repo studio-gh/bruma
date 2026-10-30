@@ -72,7 +72,9 @@ function handleOAuthError(){
   history.replaceState({}, document.title, url.pathname + url.search + url.hash);
   const messages = {
     access_denied: "A autorização do Google foi cancelada. Você pode tentar novamente quando quiser.",
-    invalid_request: "O Google recusou a solicitação de login. Confira a configuração OAuth do projeto."
+    invalid_request: "O Google recusou a solicitação de login. Confira a configuração OAuth do projeto.",
+    oauth_failed: "Não foi possível concluir o login com o Google. Tente novamente.",
+    server_error: "O Bruma encontrou um erro ao concluir o login. Tente novamente em instantes."
   };
   const message = messages[error] || "Não foi possível concluir a autorização do Google.";
   showLogin(message);

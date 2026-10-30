@@ -329,7 +329,17 @@ async function route(req, env) {
     if (req.headers.get("Origin") !== env.APP_ORIGIN) return new Response(null, { status: 403 });
     return new Response(null, { status: 204, headers: corsHeaders });
   }
-  if (u.pathname === "/health" && req.method === "GET") return json({ app: "Bruma API", status: "online", version: "d1-v1" });
+  if (u.pathname === "/health" && req.method === "GET") {
+    // Public, read-only health check. It verifies the D1 binding without exposing data.
+    try {
+      const result = await env.DB.prepare("SELECT 1 AS ok").first();
+      if (result?.ok !== 1) throw new Error("D1 health query returned an unexpected result");
+      return json({ app: "Bruma API", status: "online", database: "connected", version: "d1-v1" });
+    } catch (error) {
+      console.error("Bruma D1 health check failed:", error);
+      return json({ app: "Bruma API", status: "degraded", database: "unavailable" }, 503);
+    }
+  }
   if (u.pathname === "/auth/google" && req.method === "GET") return startOAuth(env);
   if (u.pathname === "/auth/google/callback" && req.method === "GET") {
     try { return await finishOAuth(req, env); }

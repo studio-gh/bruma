@@ -345,7 +345,16 @@ async function route(req, env) {
   if (u.pathname === "/auth/google" && req.method === "GET") return startOAuth(env);
   if (u.pathname === "/auth/google/callback" && req.method === "GET") {
     try { return await finishOAuth(req, env); }
-    catch (e) { return json({ error: e.message }, e.status || 500, { "Set-Cookie": clearCookie }); }
+    catch (e) {
+      const app = new URL(env.APP_URL);
+      app.searchParams.set("error", e.status === 400 ? "oauth_failed" : "server_error");
+      app.searchParams.set("error_description", e.message || "Google authorization failed");
+      return redirect(app.toString(), {
+        "Set-Cookie": clearCookie,
+        "Referrer-Policy": "no-referrer",
+        "Cache-Control": "no-store"
+      });
+    }
   }
   if (u.pathname === "/auth/exchange" && req.method === "POST") return exchange(req, env);
   const { user, bearer } = await auth(req, env);

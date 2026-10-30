@@ -95,3 +95,10 @@ Important distinction:
 6. Only then test Google OAuth and Drive sync.
 
 The Cloudflare dashboard currently shows the production D1 binding named `DB` pointing to `bruma-db`, and the required runtime variables/secrets are present. Do not recreate these.
+
+
+## Health route comparison reference
+
+In the current `worker/index.js` on `migration/cloudflare-api`, the complete `/health` route is at lines 338–348 (1-based). It runs `SELECT 1 AS ok` through the D1 binding and returns `database: connected` and `version: d1-v1`.
+
+When comparing the Cloudflare editor, inspect this exact route (not a guessed line range). The live endpoint previously returned only `{"app":"Bruma API","status":"online"}`, which is the old response shape. This proves the live response handler differs from the source route above, but does not identify whether the editor save was omitted, the deployment used a different editor buffer, or a different deployed script/version was routed.

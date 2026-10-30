@@ -248,6 +248,11 @@ async function sync(req, env, user) {
   if (!folder || folder.length > 512) throw new HttpError(400, "Valid folder_id required");
   const workspace = await workspaceFor(env, user.user_id);
   const { conn, access } = await driveAccess(env, workspace.id);
+  // Verify the selected item exists, is a folder, and is accessible before creating a gallery.
+  const folderInfo = await driveJson(access, "https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(folder) + "?fields=id,name,mimeType,trashed");
+  if (folderInfo.mimeType !== "application/vnd.google-apps.folder" || folderInfo.trashed) {
+    throw new HttpError(400, "The selected Google Drive item is not an available folder");
+  }
   const { files, foldersScanned } = await collectFiles(access, folder);
   let gallery = await env.DB.prepare("SELECT id FROM galleries WHERE workspace_id = ? AND folder_id = ? LIMIT 1")
     .bind(workspace.id, folder).first();

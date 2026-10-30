@@ -268,8 +268,8 @@ async function sync(req, env, user) {
       .bind(conn.id, gallery.id).run();
   }
   for (const file of files) {
-    const old = await env.DB.prepare("SELECT id FROM assets WHERE provider_file_id = ? LIMIT 1")
-      .bind(file.id).first();
+    const old = await env.DB.prepare("SELECT id FROM assets WHERE provider_file_id = ? AND gallery_id = ? LIMIT 1")
+      .bind(file.id, gallery.id).first();
     const values = [
       gallery.id, file.name, file.thumbnailLink || null,
       file.imageMediaMetadata?.width || null, file.imageMediaMetadata?.height || null,
@@ -279,9 +279,10 @@ async function sync(req, env, user) {
       // Keep a Drive file in its current gallery only when the same file was already indexed there.
       // The provider_file_id is globally unique in D1, so a sync cannot create duplicate records.
       await env.DB.prepare(`
-        UPDATE assets SET gallery_id = ?, filename = ?, thumbnail_url = ?, width = ?, height = ?,
-          mime_type = ?, updated_at = datetime('now') WHERE provider_file_id = ?
-      `).bind(...values).run();
+        UPDATE assets SET filename = ?, thumbnail_url = ?, width = ?, height = ?,
+          mime_type = ?, updated_at = datetime('now') WHERE provider_file_id = ? AND gallery_id = ?
+      `).bind(file.name, file.thumbnailLink || null, file.imageMediaMetadata?.width || null,
+        file.imageMediaMetadata?.height || null, file.mimeType || null, file.id, gallery.id).run();
     } else {
       await env.DB.prepare(`
         INSERT INTO assets (id, gallery_id, provider_file_id, filename, thumbnail_url, width, height, mime_type)

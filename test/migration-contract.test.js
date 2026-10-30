@@ -47,3 +47,10 @@ test("frontend handles Google OAuth cancellation and provider errors", () => {
   assert.match(frontend, /error_description/);
   assert.match(frontend, /searchParams\.delete\("state"\)/);
 });
+
+test("worker redirects OAuth callback failures back to the Bruma interface", () => {
+  assert.match(worker, /app\.searchParams\.set\("error", e\.status === 400 \? "oauth_failed" : "server_error"\)/);
+  assert.match(worker, /"Set-Cookie": clearCookie/);
+  assert.match(frontend, /oauth_failed/);
+  assert.match(frontend, /server_error/);
+});

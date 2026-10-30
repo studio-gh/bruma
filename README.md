@@ -73,3 +73,25 @@ Do not deploy until:
 5. OAuth login, session restore/logout and a test Drive folder sync pass.
 
 The repository's migration branch is intended for review before merging into main.
+
+
+## Manual Worker deployment (current setup)
+
+The Cloudflare Worker is currently edited and deployed manually in the Cloudflare dashboard. The GitHub repository branch does not automatically publish Worker code.
+
+Important distinction:
+- "Version saved" means the editor saved a version; it does not prove the new version serves production traffic.
+- A deployment row marked "Ready" confirms the version is prepared, but the live response must be checked to confirm the active code.
+- The live health endpoint for the revised Worker should return:
+  `{"app":"Bruma API","status":"online","database":"connected","version":"d1-v1"}`
+- If it returns only `{"app":"Bruma API","status":"online"}`, the serving Worker is still running the previous health handler. Do not proceed to OAuth tests.
+
+### Recommended manual deployment verification
+1. In Cloudflare, open Workers & Pages → bruma-api → Edit code.
+2. Confirm the editor contains the complete `worker/index.js` from this branch.
+3. Save the version, then deploy it to Production.
+4. Open `https://bruma-api.studio-gh.workers.dev/health?check=<new-value>` in a fresh tab.
+5. Confirm the response contains `database: connected` and `version: d1-v1`.
+6. Only then test Google OAuth and Drive sync.
+
+The Cloudflare dashboard currently shows the production D1 binding named `DB` pointing to `bruma-db`, and the required runtime variables/secrets are present. Do not recreate these.

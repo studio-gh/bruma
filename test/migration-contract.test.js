@@ -40,3 +40,10 @@ test("drive sync only indexes image files and verifies the folder first", () => 
   assert.match(worker, /file\.mimeType\.startsWith\("image\/"\)/);
   assert.match(worker, /folderInfo\.mimeType !== "application\/vnd\.google-apps\.folder"/);
 });
+
+test("frontend handles Google OAuth cancellation and provider errors", () => {
+  assert.match(frontend, /function handleOAuthError\(\)/);
+  assert.match(frontend, /access_denied/);
+  assert.match(frontend, /error_description/);
+  assert.match(frontend, /searchParams\.delete\("state"\)/);
+});
